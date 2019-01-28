@@ -25,7 +25,7 @@ perm.for.cutoff2 <- function(permutations = 100, tx_expr, gene.ids, cov, SCORE, 
     function(x) {
       return(str_extract(string = x, pattern = '(ENSG)[0-9]+'))
     }
-  source('/dcs01/arking/arkinglab/active/projects/npd.PRS.GTEx/code/run_lm.R') # run_LM()
+  # source('/dcs01/arking/arkinglab/active/projects/npd.PRS.GTEx/code/run_lm.R') # run_LM()
   
   # If `tx_expr` is not a list,
   # then transform it (assumes tx_expr is a [genes x smpls] expression matrix) to list
