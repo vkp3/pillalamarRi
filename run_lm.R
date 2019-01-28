@@ -1,0 +1,86 @@
+run_lm <- function(expr, cov, SCORE) {
+  expr <- as.numeric(expr)
+  expr_cov <- cbind(SCORE, expr, cov)
+  
+  # # # Run lm() normal procedure ----
+  # lm.fit <- lm(expr ~ ., data = expr_cov)
+  # lm.fit.summary <- summary(lm.fit)
+  # print(lm.fit.summary)
+  #
+  # # Get corr
+  # cor_expr_score <-
+  #   cor(expr, SCORE)
+  #
+  # # Capture p-val, etc.
+  # lm.res_ <-
+  #   as.data.frame(t(coef(lm.fit.summary)['SCORE',]))
+  # intercept <- coef(lm.fit)[1]
+  # names(intercept) <- NULL
+  # lm.res_ <-
+  #   cbind(data.frame(intercept),
+  #         lm.res_,
+  #         t(confint(lm.fit)['SCORE', ]),
+  #         cor_expr_score)
+  # #
+  # # print(lm.res_)
+  #
+  
+  # # Run lm with partly-adjusted 2-stage "regressing out" procedure (potentially incorrect) ----
+  # # Partly-adjusted model issues: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3201714/
+  # # lm.fit <- lm(expr ~ . - SCORE, data = expr_cov)
+  # # #lm.fit <- lm(expr ~ ., data = expr_cov)
+  # # #lm.fit.summary <- summary(lm.fit)
+  # # lm.fit2 <- lm(residuals(lm.fit) ~ SCORE)
+  # # lm.fit.summary <- summary(lm.fit2)
+  #
+  # # Capture p-val, etc.
+  # lm.res_ <-
+  #   as.data.frame(t(coef(lm.fit.summary)['SCORE',]))
+  # intercept <- coef(lm.fit2)[1]
+  # names(intercept) <- NULL
+  # lm.res_ <-
+  #   cbind(data.frame(intercept),
+  #         lm.res_,
+  #         t(confint(lm.fit2)['SCORE', ]),
+  #         cor_expr_score)
+  # lm_res[k, ] <- lm.res_
+  
+  # Run lm with fully-adjusted 2 stage regression residual / adjustment procedure ----
+  # https://aeolister.wordpress.com/2016/07/21/regressing-out-a-covariate-is-problematic/
+  # https://stat.ethz.ch/pipermail/r-help/2005-April/068856.html
+  # Partly adjusted model issues: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3201714/
+  # model 1: lm(Expr ~ Covariates)
+  # model 2: lm(PRS ~ Covariates)
+  # model 3: either:
+  #                 lm(rank normalized residuals of model 1 ~ residuals of model 2) OR
+  #                 lm(residuals of model 1 ~ residuals of model 2)
+  # This captures the conditional effect of PRS on adjusted gene expression
+  lm.fit1 <- lm(expr ~ . - SCORE, data = expr_cov) # regress expr onto cov
+  lm.fit2 <- lm(SCORE ~ . - expr, data = expr_cov) # regress prs onto cov
+  resid.dat <- data.frame(expr=resid(lm.fit1),
+                          SCORE=resid(lm.fit2)) # don't rank normalize adj. gene expression residuals
+  # resid.dat <- data.frame(expr=rankNorm(resid(lm.fit1)), SCORE=resid(lm.fit2)) # do rank normalize adj. gene expression residuals
+  lm.fit3 <- lm(expr ~ SCORE, data = resid.dat) # regress adjusted variables onto each other
+  lm.fit.3.summary <- summary(lm.fit3)
+  
+  cor_expr_score <-
+    with(resid.dat, cor(expr, SCORE))
+  
+  # Capture p-val, etc.
+  lm.res_ <-
+    as.data.frame(t(coef(lm.fit.3.summary)['SCORE',]))
+  intercept <- coef(lm.fit3)[1]
+  names(intercept) <- NULL
+  lm.res_ <-
+    cbind(data.frame(intercept),
+          lm.res_,
+          t(confint(lm.fit3)['SCORE', ]),
+          cor_expr_score)
+  
+  #  cat('LM output:\n')
+  #  print(lm.res_)
+  
+  #  return(as.numeric(lm.res_))
+  return(as.matrix(lm.res_))
+  
+}
