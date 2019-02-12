@@ -91,7 +91,9 @@ run_lm_two_stage <- function(expr, cov, SCORE) {
   lm.fit2 <- lm(SCORE ~ . - expr, data = expr_cov) # regress prs onto cov
   resid.dat <- data.frame(expr=resid(lm.fit1),
                           SCORE=resid(lm.fit2)) # don't rank normalize adj. gene expression residuals
-  # resid.dat <- data.frame(expr=rankNorm(resid(lm.fit1)), SCORE=resid(lm.fit2)) # do rank normalize adj. gene expression residuals
+  # resid.dat <- data.frame(expr=rankNorm(resid(lm.fit1)), 
+  #                       SCORE=resid(lm.fit2)) # do rank normalize adj. gene expression residuals
+
   lm.fit3 <- lm(expr ~ SCORE, data = resid.dat) # regress adjusted variables onto each other
   lm.fit.3.summary <- summary(lm.fit3)
 
@@ -109,10 +111,6 @@ run_lm_two_stage <- function(expr, cov, SCORE) {
           t(confint(lm.fit3)['SCORE', ]),
           cor_expr_score)
 
-  #  cat('LM output:\n')
-  #  print(lm.res_)
-
-  #  return(as.numeric(lm.res_))
   return(as.matrix(lm.res_))
 }
 
