@@ -8,7 +8,8 @@
 #' @return A [1 x 8] vector output from an lm() like below:
 #'         ['intercept', 'beta', 'SE', 't_value', 'pval', 'beta.conf.low', 'beta.conf.high', 'corr.rho']
 #'
-#' @example
+#' @example using `pbapply::pblapply` to parallelize run_lm() over all genes
+#' num.cores = 10
 #' lm.res <-
 #' pblapply(tx_expr,            # Expression vector list for `pbapply::pblapply`
 #'         run_lm,              # This function
@@ -115,7 +116,7 @@ run_lm_two_stage <- function(expr, cov, SCORE) {
   return(as.matrix(lm.res_))
 }
 
-# OLD Code
+# OLD Code ----
 # # Run lm with partly-adjusted 2-stage "regressing out" procedure (potentially incorrect)
 # # Partly-adjusted model issues: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3201714/
 # # lm.fit <- lm(expr ~ . - SCORE, data = expr_cov)
