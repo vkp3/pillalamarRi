@@ -1,22 +1,22 @@
 #' Runs linear regression to estimate effect of polygenic risk SCORE (PRS) on gene expression
+#' @description formula: Expr ~ PRS + Cov, where Cov = covariates
 #' 
-#' @param expr Expression vector (numeric) of size length of [samples]
-#' @param cov Regression covariates [cov x samples]
-#' @param SCORE Main covariate to be permuted (PRS, not included in `cov`)
-#' 
-#' @export
-#' 
+#' @param expr Expression vector (numeric) with length = #samples
+#' @param cov Regression covariates in form [cov x samples]
+#' @param SCORE The PRS, not included in `cov`
+#' @param method Choose between 'default' or 'two-stage' for lm() method (see desc. in support functions below)
 #' @return A [1 x 8] vector output from an lm() like below:
-#' ['intercept', 'beta', 'SE', 't_value', 'pval', 'beta.conf.low', 'beta.conf.high', 'corr.rho']
+#'         ['intercept', 'beta', 'SE', 't_value', 'pval', 'beta.conf.low', 'beta.conf.high', 'corr.rho']
 #'
-#' @examples 
+#' @example
 #' lm.res <-
-#' pblapply(tx_expr,
-#'         run_lm,
-#'         cov = cov,
-#'         SCORE = SCORE,
-#'         method = 'two-stage',
-#'         cl = num.cores)
+#' pblapply(tx_expr,            # Expression vector list for `pbapply::pblapply`
+#'         run_lm,              # This function
+#'         cov = cov,           # Covariate matrix, as desribed above
+#'         SCORE = SCORE,       # PRS
+#'         method = 'two-stage',# Choose between 'default' or 'two-stage'
+#'         cl = num.cores)      # Number of cores to parallelize over
+#'         
 #' lm.res <- simplify2array(lm.res, higher=F)
 #' rownames(lm.res) <-
 #'  c('intercept',
@@ -71,6 +71,7 @@ run_lm_default <- function(expr, cov, SCORE) {
   
   return(as.matrix(lm.res_))
 }
+
 run_lm_two_stage <- function(expr, cov, SCORE) {
   expr <- as.numeric(expr)
   expr_cov <- cbind(SCORE, expr, cov)
@@ -114,8 +115,8 @@ run_lm_two_stage <- function(expr, cov, SCORE) {
   return(as.matrix(lm.res_))
 }
 
-# OLD
-# # Run lm with partly-adjusted 2-stage "regressing out" procedure (potentially incorrect) ----
+# OLD Code
+# # Run lm with partly-adjusted 2-stage "regressing out" procedure (potentially incorrect)
 # # Partly-adjusted model issues: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3201714/
 # # lm.fit <- lm(expr ~ . - SCORE, data = expr_cov)
 # # #lm.fit <- lm(expr ~ ., data = expr_cov)
