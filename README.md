@@ -1,2 +1,1 @@
-Example R scripts.
-Author: Vamsee Pillalamarri
+Various R scripts
